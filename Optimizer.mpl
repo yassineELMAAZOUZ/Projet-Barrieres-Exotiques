@@ -6,6 +6,7 @@ with(plots):
 
 
 MuBar := proc(z,n,m)
+	local x,s;
 	x  :=  z(1..n);
 	s  :=  z(n+m+1..2*n+m);
 	return DotProduct(Transpose(x),s) / n
@@ -13,11 +14,12 @@ end proc;
 
 
 IsAdmissible := proc(z, A,b,c, n,m)
-
+	local x,y,s;
 	x  :=  z(1..n);
 	y  := z(n+1 .. n+m);
 	s  :=  z(n+m+1..2*n+m);
 
+	local b1,b2,b3;
 	b1:= Equal(Multiply(A,x) , b);
 	b2:= Equal( Multiply(Transpose(A) , y) + s , c);
 	b3:= true;
@@ -30,22 +32,25 @@ end proc;
 
 
 IsInV := proc(theta,z, A,b,c, n,m)
-
+	
+	local x,y,s;
 	x  :=  z(1..n);
 	y  := z(n+1 .. n+m);
 	s  :=  z(n+m+1..2*n+m);
 
+	local b1,muBar;
 	b1:= IsAdmissible(z,A,b,c,n,m);
 	muBar := MuBar(z,n,m);
-	return b1 and evalb( Norm( Multiply( Matrix(DiagonalMatrix(x)), s) - muBar * Vector(n,1) ,2) <= theta * muBar);
+	return (b1 and evalb( Norm( Multiply( Matrix(DiagonalMatrix(x)), s) - muBar * Vector(n,1) ,2) <= theta * muBar);)
 end proc;
 
 
 NewtonMatrix := proc(n,m,A,z)
-	
+	local x,s;
 	x  :=  z(1..n):
 	s  :=  z(n+m+1..2*n+m):
 
+	local X,S;
 	X := Matrix(DiagonalMatrix(x)):
 	S := Matrix(DiagonalMatrix(s)):
 
@@ -56,10 +61,11 @@ end proc:
 
 
 GetNewtonDirection := proc(n,m,A,z,mu)
-	
+	local x,s;
 	x  :=  z(1..n):
 	s  :=  z(n+m+1..2*n+m):
 
+	local M,X,e,Vect;
 	M  := NewtonMatrix(n,m,A,z):
 
 	X      :=  Matrix(DiagonalMatrix(x)):
@@ -75,6 +81,7 @@ end proc:
 
 GetMaxAlpha := proc(n,m,z,dz,theta_prime)
 
+	local dx,dX,ds,dS,x,X,s,S,e,v1,v2,v3,a0,a1,a2,a3,a4;
 	dx :=  dz(1..n):
 	dX :=  Matrix(DiagonalMatrix(dx)):
 
@@ -104,6 +111,7 @@ GetMaxAlpha := proc(n,m,z,dz,theta_prime)
 	
 	a4 := DotProduct(v3,v3) - (theta_prime*MuBar(dz,n,m))^2:
 
+	local S_exact,S_floats,k;
 	S_exact := Polynomial(a0 + a1*alpha + a2*alpha^2 + a3*alpha^3 + a4*alpha^4,alpha, explicit = true):
 	S_floats := evalf(S_exact):
 
@@ -111,6 +119,7 @@ GetMaxAlpha := proc(n,m,z,dz,theta_prime)
 
 	k:= nops(S_exact);
 
+	local alpha_max;
 	alpha_max :=0:
 
 	for i from 1 to k do 
@@ -132,7 +141,7 @@ end	proc:
 GetNextPoint := proc(n,m,A,z,theta,theta_prime)
 
 	########## Prediction ###########
-
+	local d,alpha,z_prime;
 	d := GetNewtonDirection(n,m,A,z,0):
 	alpha := GetMaxAlpha(n,m,z,d,theta_prime);
 
@@ -153,6 +162,7 @@ GetNextPoint := proc(n,m,A,z,theta,theta_prime)
 
 	########## Correction ############
 
+	local d_prime,z_plus;
 	d_prime := GetNewtonDirection(n,m,A,z_prime,MuBar(z_prime,n,m)):
 	z_plus := z_prime + d_prime:
 
@@ -166,7 +176,7 @@ end proc:
 
 
 SolvePL := proc(n,m,A,z,theta,theta_prime,N);
-
+	
 	L := [z(1..n)]:
 
 
@@ -200,38 +210,7 @@ SolvePL(n,m,A,z,theta,theta_prime,3);
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 (*
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -325,6 +304,4 @@ alpha_max;
 
 
 *)
-
-
 
