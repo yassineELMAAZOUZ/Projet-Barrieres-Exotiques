@@ -9,6 +9,11 @@ MatrixForEq := proc(n,m,A)
 	return blockmatrix(1,2,[A,IdentityMatrix(m)]);
 	end proc;
 
+ExtracIneqProblemVector:= proc(z,n)
+	return z(1..n);
+	end proc;
+
+
 AGenerator := proc(r,t);
 	local L,Line1,Line2;
 	
