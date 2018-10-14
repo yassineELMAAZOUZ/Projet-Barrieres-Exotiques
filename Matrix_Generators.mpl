@@ -47,7 +47,7 @@ AGenerator := proc(r,t)
 end proc:
 
 
-bGenerator := proc(r,t)
+BGenerator := proc(r,t)
 
 	return Concatenate(1,Vector[column](<t^2,t>),Vector[column](3*r-1,0));
 	
@@ -55,12 +55,21 @@ end proc:
 
 
 
+EquatlityConstraintsAGenerator := proc(r,t)
+	local A;
+	
+	A := AGenerator(r,t);
+
+	return Matrix(blockmatrix(1,2,[A,IdentityMatrix(3*r+1)]));
+
+end proc;
 
 
-A := AGenerator(6,t):
-A;
-
-b := bGenerator(6,t):
-b;
-
+EquatlityConstraintsBGenerator := proc(r,t)
+	
+local B;
+	B := BGenerator(r,t);
+	return B;
+	
+end proc;
 
