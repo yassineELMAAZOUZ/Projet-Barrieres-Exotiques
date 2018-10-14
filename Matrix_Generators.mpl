@@ -8,24 +8,43 @@ with(ArrayTools):
 
 
 AGenerator := proc(r,t);
-	local L;
-	 L := [Concatenate(2, Vector[row](<1,0>) ,Vector[row](2*r-2,0) ),
-	       Concatenate(2, Vector[row](<0,1>) ,Vector[row](2*r-2,0) )];
-
-
-
+	local L,Line1,Line2;
 	
-
-
-
+	Line1 := convert(Concatenate(2, Vector[row](<1,0>) ,Vector[row](2*r-2,0) ),list);
+	Line2 := convert(Concatenate(2, Vector[row](<0,1>) ,Vector[row](2*r-2,0) ),list);
 	
-	for i from 1 to N do
+	L := [Line1, Line2];
+	
+	for i from 1 to r-1 do
 
-			z1 := GetNextPoint(n,m,A,z,theta,theta_prime):
-			z := z1:
-			L := [op(L),z(1..n)]:
+		Line1 := convert(Concatenate(3, Vector[row](<i-1,0>), Vector[row](<-t,0,1>), Vector[row](2*r-2,0) ),list);
+		Line2 := convert(Concatenate(3, Vector[row](<i-1,0>), Vector[row](<0,-t,1>), Vector[row](2*r-2,0) ),list);
+			
+		L := [op(L),Line1]:
+		L := [op(L),Line2]:
+
+	end do;
+	
+	
+	for i from 1 to r do
+		Line1 := convert(Concatenate(3, Vector[row](<2*(i-1),0>), Vector[row](<-(t^(1-(1/(2^i)))),-(t^(1-(1/(2^i)))),1,0>), Vector[row](2*(r-i-2),0) ),list);
+		
+		L := [op(L),Line1]:
+		
+	end do;
+	
+	
+	Line1 := convert(Concatenate(2, Vector[row](<2*r-2,0>), Vector[row](<-1,0>)),list)
+	Line2 := convert(Concatenate(2, Vector[row](<2*r-2,0>), Vector[row](<0,-1>)),list)
+	
+	L := [op(L),Line1]:
+	L := [op(L),Line2]:
 
 	end do:
+	
+	return Matrix(3*r+1,2*r,L);
+	
+	
 end proc:
 
 
