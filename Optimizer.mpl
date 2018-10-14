@@ -111,7 +111,7 @@ GetMaxAlpha := proc(n,m,z,dz,theta_prime)
 	
 	if nops([Sol]) = 0 then print("alpha: Makaynch SOLOTION :( :(") end if;
 	
-	return Sol[1];
+	return Sol;
 
 end	proc:
 
