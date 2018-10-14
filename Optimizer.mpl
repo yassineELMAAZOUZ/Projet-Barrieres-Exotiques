@@ -14,12 +14,11 @@ end proc;
 
 
 IsAdmissible := proc(z, A,b,c, n,m)
-	local x,y,s;
+	local x,y,s, b1,b2,b3;
 	x  :=  z(1..n);
 	y  := z(n+1 .. n+m);
 	s  :=  z(n+m+1..2*n+m);
 
-	local b1,b2,b3;
 	b1:= Equal(Multiply(A,x) , b);
 	b2:= Equal( Multiply(Transpose(A) , y) + s , c);
 	b3:= true;
@@ -33,24 +32,22 @@ end proc;
 
 IsInV := proc(theta,z, A,b,c, n,m)
 	
-	local x,y,s;
+	local x,y,s, b1,muBar;
 	x  :=  z(1..n);
 	y  := z(n+1 .. n+m);
 	s  :=  z(n+m+1..2*n+m);
 
-	local b1,muBar;
 	b1:= IsAdmissible(z,A,b,c,n,m);
 	muBar := MuBar(z,n,m);
-	return (b1 and evalb( Norm( Multiply( Matrix(DiagonalMatrix(x)), s) - muBar * Vector(n,1) ,2) <= theta * muBar);)
+	return (b1 and evalb( Norm( Multiply( Matrix(DiagonalMatrix(x)), s) - muBar * Vector(n,1) ,2) <= theta * muBar));
 end proc;
 
 
 NewtonMatrix := proc(n,m,A,z)
-	local x,s;
+	local x,s, X,S;
 	x  :=  z(1..n):
 	s  :=  z(n+m+1..2*n+m):
 
-	local X,S;
 	X := Matrix(DiagonalMatrix(x)):
 	S := Matrix(DiagonalMatrix(s)):
 
@@ -61,11 +58,10 @@ end proc:
 
 
 GetNewtonDirection := proc(n,m,A,z,mu)
-	local x,s;
+	local x,s, M,X,e,Vect;
 	x  :=  z(1..n):
 	s  :=  z(n+m+1..2*n+m):
 
-	local M,X,e,Vect;
 	M  := NewtonMatrix(n,m,A,z):
 
 	X      :=  Matrix(DiagonalMatrix(x)):
@@ -81,7 +77,7 @@ end proc:
 
 GetMaxAlpha := proc(n,m,z,dz,theta_prime)
 
-	local dx,dX,ds,dS,x,X,s,S,e,v1,v2,v3,a0,a1,a2,a3,a4;
+	local dx,dX,ds,dS,x,X,s,S,e, v1,v2,v3,a0,a1,a2,a3,a4, Sol;
 	dx :=  dz(1..n):
 	dX :=  Matrix(DiagonalMatrix(dx)):
 
@@ -111,28 +107,11 @@ GetMaxAlpha := proc(n,m,z,dz,theta_prime)
 	
 	a4 := DotProduct(v3,v3) - (theta_prime*MuBar(dz,n,m))^2:
 
-	local S_exact,S_floats,k;
-	S_exact := Polynomial(a0 + a1*alpha + a2*alpha^2 + a3*alpha^3 + a4*alpha^4,alpha, explicit = true):
-	S_floats := evalf(S_exact):
-
-	print(S_floats);
-
-	k:= nops(S_exact);
-
-	local alpha_max;
-	alpha_max :=0:
-
-	for i from 1 to k do 
-
-		if type( S_floats[i],'float' ) then
-
-					if S_floats[i]>=alpha_max then 
-								alpha_max:= S_exact[i]:
-					end if:
-		end if:
-	end do:
-
-	return evalf(alpha_max,10000);
+	Sol := fsolve(a0 + a1*alpha + a2*alpha^2 + a3*alpha^3 + a4*alpha^4, alpha, fulldigits, 0 ..infinity):
+	
+	if nops([Sol]) = 0 then print("alpha: Makaynch SOLOTION :( :(") end if;
+	
+	return Sol[1];
 
 end	proc:
 
@@ -141,19 +120,21 @@ end	proc:
 GetNextPoint := proc(n,m,A,z,theta,theta_prime)
 
 	########## Prediction ###########
-	local d,alpha,z_prime;
+	local d,alpha,z_prime, d_prime,z_plus;
 	d := GetNewtonDirection(n,m,A,z,0):
+	print("d"):
+	print(d):
+	
 	alpha := GetMaxAlpha(n,m,z,d,theta_prime);
-
+	
 	z_prime := z + alpha.d:
-
+	
 	print("Prediction "):
 	
 	print("alpha"):
 	print(alpha):
 	
-	print("d"):
-	print(d):
+
 
 
 	print("z_prime"):
@@ -162,7 +143,7 @@ GetNextPoint := proc(n,m,A,z,theta,theta_prime)
 
 	########## Correction ############
 
-	local d_prime,z_plus;
+
 	d_prime := GetNewtonDirection(n,m,A,z_prime,MuBar(z_prime,n,m)):
 	z_plus := z_prime + d_prime:
 
@@ -175,17 +156,15 @@ end proc:
 	
 
 
-SolvePL := proc(n,m,A,z,theta,theta_prime,N);
-	
+SolvePL := proc(n,m,A,z,theta,theta_prime,N)
+	local zz, L, z1;
 	L := [z(1..n)]:
-
+	zz:= z;
 
 	for i from 1 to N do
-
-			z1 := GetNextPoint(n,m,A,z,theta,theta_prime):
-			z := z1:
-			L := [op(L),z(1..n)]:
-
+			z1 := GetNextPoint(n,m,A,zz,theta,theta_prime):
+			zz := z1:
+			L := [op(L),zz(1..n)]:
 	end do:
 end proc:
 
@@ -200,12 +179,16 @@ A := Matrix(2,4,[[1,0,0,0],[0,1,0,0]]):
 n := 4:
 m := 2:	
 b := Vector(2,1): 
-z := <1,1,100,102,  -2,-2,  2,2,1,1>;
-theta := 1/4;
-theta_prime := 1/2;
+z := <1,1,100,102,  -2,-2,  2,2,1,1>:
+theta := 1/4:
+theta_prime := 1/2:
 
 
 SolvePL(n,m,A,z,theta,theta_prime,3);
+
+
+
+
 
 
 
