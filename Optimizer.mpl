@@ -111,28 +111,12 @@ GetMaxAlpha := proc(n,m,z,dz,theta_prime)
 	
 	a4 := DotProduct(v3,v3) - (theta_prime*MuBar(dz,n,m))^2:
 
-	local S_exact,S_floats,k;
-	S_exact := Polynomial(a0 + a1*alpha + a2*alpha^2 + a3*alpha^3 + a4*alpha^4,alpha, explicit = true):
-	S_floats := evalf(S_exact):
+	local S;
+	S := fsolve(a0 + a1*alpha + a2*alpha^2 + a3*alpha^3 + a4*alpha^4, alpha, fulldigits, -infinity ..0):
+	
+	if nops([S]) = 0 then print("alpha: Makaynch SOLOTION :( :(") end if;
 
-	print(S_floats);
-
-	k:= nops(S_exact);
-
-	local alpha_max;
-	alpha_max :=0:
-
-	for i from 1 to k do 
-
-		if type( S_floats[i],'float' ) then
-
-					if S_floats[i]>=alpha_max then 
-								alpha_max:= S_exact[i]:
-					end if:
-		end if:
-	end do:
-
-	return evalf(alpha_max,10000);
+	return S[1];
 
 end	proc:
 
