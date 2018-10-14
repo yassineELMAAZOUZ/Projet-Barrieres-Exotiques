@@ -70,9 +70,9 @@ GetNewtonDirection := proc(n,m,A,z,mu)
 
 	X      :=  Matrix(DiagonalMatrix(x)):
 	e      :=  Vector(n,1):
-	Vect   :=  Matrix(blockmatrix(3,1,[Vector(n,0),Vector(m,0),mu.e - X.s])):
+	Vect   :=  convert(blockmatrix(3,1,[Vector(n,0),Vector(m,0),mu.e - X.s]),Vector):
 
-	return convert(MatrixInverse(M).Vect,Vector):
+	return LinearSolve(M,Vect):
 
 
 end proc:
