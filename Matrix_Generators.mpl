@@ -5,6 +5,7 @@ with(plots):
 with(ArrayTools):
 
 
+	
 AGenerator := proc(r,t)
 
 	local L,Line1,Line2;
@@ -47,6 +48,9 @@ AGenerator := proc(r,t)
 end proc:
 
 
+
+
+
 bGenerator := proc(r,t)
 
 	return Concatenate(1,Vector[column](<t^2,t>),Vector[column](3*r-1,0));
@@ -54,7 +58,9 @@ bGenerator := proc(r,t)
 end proc:
 
 
-
+MatrixForEq := proc(n,m,A)
+	return blockmatrix(1,2,[A,IdentityMatrix(m)]);
+end proc;
 
 
 A := AGenerator(6,t):
