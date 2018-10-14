@@ -5,7 +5,9 @@ with(plots):
 with(ArrayTools):
 
 
-
+MatrixForEq := proc(n,m,A)
+	return blockmatrix(1,2,[A,IdentityMatrix(m)]);
+	end proc;
 
 AGenerator := proc(r,t);
 	local L,Line1,Line2;
