@@ -123,7 +123,7 @@ GetNextPoint := proc(n,m,A,z,theta,theta_prime)
 	local d,alpha,z_prime, d_prime,z_plus;
 	d := GetNewtonDirection(n,m,A,z,0):
 	print("d"):
-	print(d):
+	print(d);
 	
 	alpha := GetMaxAlpha(n,m,z,d,theta_prime);
 	
@@ -150,7 +150,7 @@ GetNextPoint := proc(n,m,A,z,theta,theta_prime)
 	print("Correction "):
 	print(z_plus):
 
-	return evalf(z_plus,1000000);
+	return z_plus;
 
 end proc:
 	
