@@ -39,8 +39,9 @@ IsInV := proc(theta,z, A,b,c, n,m)
 
 	b1:= IsAdmissible(z,A,b,c,n,m);
 	muBar := MuBar(z,n,m);
-	return (b1 and evalb( Norm( Multiply( Matrix(DiagonalMatrix(x)), s) - muBar * Vector(n,1) ,2) <= theta * muBar));
+	return (b1 and evalb( evalf(Norm( Multiply( Matrix(DiagonalMatrix(x)), s) - muBar * Vector(n,1) ,2)) <= evalf(theta * muBar)));
 end proc;
+
 
 
 NewtonMatrix := proc(n,m,A,z)
