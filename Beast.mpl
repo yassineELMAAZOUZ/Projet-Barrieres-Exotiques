@@ -50,6 +50,66 @@ end proc:
 
 
 
+Tropical_x := proc(lambda,r)
+	
+
+	local j,x, x1_old,x2_old,x1_new,x2_new ;
+
+	x1_old := min(2,lambda);
+	x2_old := 1;
+
+	x := [x1_old,x2_old];
+	
+	for j from 1 to r-1 do:
+
+		x1_new := 1 + min(x1_old,x2_old);
+		x2_new := (1-1/(2^j)) + max(x1_old,x2_old);
+
+		x := [op(x),x1_new,x2_new];
+
+		x1_old := x1_new;
+		x2_old := x2_new;
+	end do:
+
+
+	return convert(x, Vector[column]);
+
+
+end proc:
+
+
+Tropical_y:= proc(lambda,r)
+	
+	local j,x,y ;
+
+	x := Tropical_x(lambda,r);
+
+	y := [lambda - 2, lambda - 1];
+	
+	for j from 1 to r-1 do:
+
+		
+		y := [ op(y),lambda - 1 + x[2*j-1] ];
+		y := [ op(y),lambda - 1 + x[ 2*j ] ];
+		y := [ op(y),lambda - 1 + x[2*j-1] ];
+
+	end do:
+
+
+	return convert(y, Vector[column]);
+
+end proc:
+
+
+
+
+
+
+
+
+
+
+
 EquatlityConstraintsAGenerator := proc(r,t)
 	local A;
 	
