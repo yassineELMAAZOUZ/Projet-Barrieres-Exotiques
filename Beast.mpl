@@ -87,11 +87,10 @@ Tropical_y:= proc(lambda,r)
 	y := [lambda - 2, lambda - 1];
 	
 	for j from 1 to r-1 do:
-
 		
-		y := [ op(y),lambda - 1 + x[2*j-1] ];
-		y := [ op(y),lambda - 1 + x[ 2*j ] ];
-		y := [ op(y),lambda - 1 + x[2*j-1] ];
+		y := [ op(y),lambda - 1 - x[2*j-1] ];
+		y := [ op(y),lambda - 1 - x[ 2*j ] ];
+		y := [ op(y),lambda - x[2*j+2] ];
 
 	end do:
 
