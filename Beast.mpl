@@ -93,7 +93,9 @@ Tropical_y:= proc(lambda,r)
 		y := [ op(y),lambda - x[2*j+2] ];
 
 	end do:
-
+	
+	y:= [ op(y),lambda - x[2*r-1] ];
+	y:= [ op(y),lambda - x[2*r] ];
 
 	return convert(y, Vector[column]);
 
