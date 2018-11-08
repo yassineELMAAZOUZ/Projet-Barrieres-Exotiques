@@ -587,12 +587,19 @@ z := z_eq:
 
 z(n-1..n);
 
+SolvePL2 := proc(n,m,A,z,theta,theta_prime,N)
+	local zz, L, z1;
+	L := [z(n-1..n)]:
+	zz:= z;
 
-L:=SolvePL(n,m,A_eq,z,theta,theta_prime,20):
+	for i from 1 to N do
+			z1 := GetNextPoint(n,m,A,zz,theta,theta_prime):
+			zz := z1:
+			L := [op(L),zz(n-1..n)]:
+	end do:
+end proc:
 
-
-
-
+L:=SolvePL2(n,m,A_eq,z,theta,theta_prime,20):
 
 
 
