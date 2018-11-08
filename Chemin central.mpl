@@ -657,3 +657,49 @@ beta  := BetaGenerator(r,3);
 
 
 
+
+
+
+
+
+
+
+
+################################ Correction ##################################
+
+mu  := evalf(MuBar(z_eq,n,m));
+critereon := evalf(Norm( DiagonalMatrix(x_eq).s_eq - mu.Vector(n,1)  ,2 ) / mu);
+
+
+
+
+while(critereon >= 0.0025 ) do
+
+	dz := GetNewtonDirection(n,m,A_eq,z_eq,mu):
+
+	z    := z_eq + dz:
+	z_eq :=z:
+
+	x_eq  :=  z(1..n):
+	y_eq  :=  z(n+1 .. n+m):
+	s_eq  :=  z(n+m+1..2*n+m):
+
+
+	mu  := evalf(MuBar(z_eq,n,m));
+	critereon := evalf(Norm( DiagonalMatrix(x_eq).s_eq - mu.Vector(n,1)  ,2 ) / mu);
+
+	print(evalf(x_eq)):
+	print(evalf(s_eq)):
+
+	print(critereon):
+
+end do:
+
+
+
+
+
+
+
+
+
