@@ -599,3 +599,61 @@ plotpoints:= proc(a)
 	end proc;
 plotpoints(L);
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+AlphaGenerator := proc(r,l)
+
+	local alpha:
+
+	alpha :=[]:
+
+
+	for i from 1 to r do
+		alpha := [op(alpha),l^(r-i+1),l^(r-i+1)]:
+	end do:
+
+	alpha_vector := convert(alpha,Vector[column]):
+
+	return alpha_vector / (l^(r+1)):
+
+end proc:
+
+
+BetaGenerator := proc(r,l)
+
+	local beta:
+
+	beta :=[l^r,l^r]:
+
+	for i from 1 to r-1 do
+
+		beta := [op(beta),l^(r-i),l^(r-i),l^(r-i)]:
+
+	end do:
+
+	beta := [op(beta),l/2,l/2]:
+
+	beta_vector := convert(beta,Vector[column]):
+
+	return beta_vector / (l^(r+1)):
+
+end proc:
+
+
+alpha := AlphaGenerator(r,2);
+beta  := BetaGenerator(r,3);
+
+
+
+
