@@ -605,7 +605,7 @@ L:=SolvePL2(n,m,A_eq,z,theta,theta_prime,20):
 plot2lastCoor := proc(L)
 	func := proc (x) return convert(x, list) end proc;
 	M:= map(func, L);
-	display(curve([M], color = red, linestyle = dash, thickness = 2));
+	display(curve(M, color = red, linestyle = dash, thickness = 2));
 	end proc:
 
 
