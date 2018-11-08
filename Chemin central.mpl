@@ -5,7 +5,7 @@ with(SolveTools):
 with(plots):
 with(ArrayTools):
 
-Digits := 20:
+Digits := 100:
 interface(rtablesize = 100):
 
 
@@ -19,7 +19,7 @@ AGenerator := proc(r,t)
 	Line2 := convert(Concatenate(2, Vector[row](<0,1>) ,Vector[row](2*r-2,0) ),list);
 	
 	L := [Line1, Line2];
-	
+
 	for i from 1 to r-1 do
 
 		Line1 := convert(Concatenate(2, Vector[row](2*(i-1),0), Vector[row](<-t,0,1>), Vector[row](2*(r-i)-1,0) ),list);
@@ -260,16 +260,16 @@ GetNextPoint := proc(n,m,A,z,theta,theta_prime)
 	
 	z_prime := z + rho.d:
 	
-	print("Prediction "):
+	(*print("Prediction "):
 	
 	print("rho"):
-	print(rho):
+	print(rho):*)
 	
 
 
 
-	print("z_prime"):
-	print(z_prime(n-1..n)):
+	(*print("z_prime"):
+	print(z_prime(n-1..n)):*)
 	
 
 	########## Correction ############
@@ -278,8 +278,8 @@ GetNextPoint := proc(n,m,A,z,theta,theta_prime)
 	d_prime := GetNewtonDirection(n,m,A,z_prime,MuBar(z_prime,n,m)):
 	z_plus := z_prime + d_prime:
 
-	print("Correction "):
-	print(z_plus(n-1..n)):
+	(*print("Correction "):
+	print(z_plus(n-1..n)):*)
 
 	return evalf(z_plus,1000000);
 
@@ -304,12 +304,12 @@ end proc:
 
 
 
+###############################################
+############Defining our problem###################
+###############################################
 
 
-
-
-
-t:=2;
+t:=10;
 r:=3:
 
 n := 5*r+1:
@@ -320,23 +320,23 @@ theta_prime := 0.5:
 
 
 
-A := AGenerator(r, t):
+A := AGenerator(r, t): 
 At := Transpose(A):
 b := BGenerator(r,t):
 c := convert(<1,Vector(2*r-1,0)>,Vector):
 
 
-
+##Transforming the problem into equality formulation (cf. livre Gilbert)
 
 A_eq := EquatlityConstraintsAGenerator(r,t):
 A_eqt:= Transpose(A_eq):
 b_eq := b:
-c_eq := Vector[column](<c,Vector(3*r+1,0)>):
+c_eq := <c,Vector(3*r+1,0)>:
 
-
+##Lifting coeff. We use monomial functiuns for puiseux series
 alpha := <2^6,2^6,2^5,2^5,2^4,2^4,2^3,2^3,2^2,2^2,2^1,2^1,2^0,2^0>/(2^8): 
 l := 2.01:
-beta := <l^6, l^6, l^5, l^5, l^5,l^4, l^4, l^4, l^3, l^3, l^3, l^2, l^2, l^2, l, l, l, l, l>/(l^7):
+beta := <l^6, l^6, l^5, l^5, l^5,l^4, l^4, l^4, l^3, l^3, l^3, l^2, l^2, l^2, l, l, l, l/2, l/2>/(l^7):
 
 
 
@@ -347,23 +347,19 @@ X:= Tropical_x(lambda,r):
 f := x -> t^x:
 
 v_y:= convert(map(f, Y),Vector):
-
-
 v_x:= convert(map(f, X),Vector):
 
-
+##Lifted variables
 lifted_x := (alpha *~ v_x):
 lifted_w := (b - A.lifted_x):
 lifted_y := (beta *~ v_y):
 lifted_s := (Multiply(At,lifted_y) + c):
 
 
-
-
+## Going to equality problem
 x_eq := convert(<lifted_x,lifted_w>,Vector[column]):
 y_eq := convert(<-lifted_y>,Vector[column]):
 s_eq := convert(<lifted_s,lifted_y>,Vector[column]):
-
 
 c_eq := convert(<c,Vector[column](3*r+1,0)>,Vector[column]):
 z_eq := convert(<x_eq,y_eq,s_eq>,Vector[column]):
@@ -372,9 +368,7 @@ z_eq := convert(<x_eq,y_eq,s_eq>,Vector[column]):
 
 
 
-
-
-
+##Not working yet (the zero depends on Digits...##############
 IsAdmissible := proc(z, A,b,c, n,m)
 	local x,y,s, b1,b2,b3;
 	x  :=  z(1..n);
@@ -403,30 +397,7 @@ IsInV := proc(theta,z, A,b,c, n,m)
 	muBar := MuBar(z,n,m);
 	return (b1 and evalb( Norm( Multiply( Matrix(DiagonalMatrix(x)), s) - muBar * Vector(n,1) ,2) <= theta * muBar));
 end proc;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#############################"
 
 
 
@@ -587,26 +558,44 @@ z := z_eq:
 
 z(n-1..n);
 
-SolvePL2 := proc(n,m,A,z,theta,theta_prime,N)
+
+
+## Returns list of points in the path by taking only 2 last coordinates
+SolvePL2lastCoor := proc(n,m,A,z,theta,theta_prime,N)
 	local zz, L, z1;
 	L := [z(n-1..n)]:
 	zz:= z;
 
 	for i from 1 to N do
+			print(i);
 			z1 := GetNextPoint(n,m,A,zz,theta,theta_prime):
 			zz := z1:
 			L := [op(L),zz(n-1..n)]:
 	end do:
 end proc:
 
+
+
 L:=SolvePL2(n,m,A_eq,z,theta,theta_prime,20):
 
 
+
+## plots the path (as a curve) by taking only 2 last coordinates
 plot2lastCoor := proc(L)
+	local M, func: 
 	func := proc (x) return convert(x, list) end proc;
 	M:= map(func, L);
 	display(curve(M, color = red, linestyle = dash, thickness = 2));
 	end proc:
 
+plot2lastCoor(L);
 
+## plots the path (as points) by taking only 2 last coordinates
+plotpoints:= proc(a)
+	local M, func;
+	func:= proc(v) return point(convert(v,list),color=magenta,symbolsize=25,symbol=diamond) end proc;
+	M:= map(func, a);
+	display(M);
+	end proc;
+plotpoints(L);
 
