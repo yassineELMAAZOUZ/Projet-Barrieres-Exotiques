@@ -1,3 +1,42 @@
+AlphaGenerator := proc(r,l)
+
+	local alpha:
+
+	alpha :=[]:
+
+
+	for i from 1 to r do
+		alpha := [op(alpha),l^(r-i+1),l^(r-i+1)]:
+	end do:
+
+	alpha_vector := convert(alpha,Vector[column]):
+
+	return alpha_vector / (l^(r+1)):
+
+end proc:
+
+
+BetaGenerator := proc(r,l)
+
+	local beta:
+
+	beta :=[l^r,l^r]:
+
+	for i from 1 to r-1 do
+
+		beta := [op(beta),l^(r-i),l^(r-i),l^(r-i)]:
+
+	end do:
+
+	beta := [op(beta),1,1]:
+
+	beta_vector := convert(beta,Vector[column]):
+
+	return beta_vector / (l^(r+1)):
+
+end proc:
+
+
 Lifter := proc(r,t,lambda,l_alpha,l_beta)
 	
 	
