@@ -303,7 +303,7 @@ r:=6:
 
 n := 5*r+1:
 m := 3*r+1:
-lambda:= 3/2:
+lambda:= 0.5:
 theta := 0.25:
 theta_prime := 0.5:
 
@@ -436,7 +436,7 @@ end proc;
 
 mu  := evalf(MuBar(z_eq,n,m));
 critereon := evalf(Norm( DiagonalMatrix(x_eq).s_eq - mu.Vector(n,1)  ,2 ) / mu);
-num:=6:
+num:=8:
 
 for k from 1 to num do
 
@@ -497,7 +497,7 @@ end proc:
 
 
 
-L:=SolvePL2lastCoor(n,m,A_eq,z,theta,theta_prime, 24):
+L:=SolvePL2lastCoor(n,m,A_eq,z,theta,theta_prime, 40):
 
 
 
@@ -522,6 +522,15 @@ plotpoints:= proc(a)
 
 plotpoints(L);
 
+
+plotLogpoints := proc (a) 
+local M, func; 
+func := proc (v) return Reverse(convert(v, list)) end proc; 
+M := map(func, a); 
+logplot(M, style = point);
+end proc; 
+
+plotLogpoints(L);
 
 
 
