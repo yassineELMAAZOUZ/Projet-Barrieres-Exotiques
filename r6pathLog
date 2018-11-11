@@ -1,4 +1,3 @@
-
 with(LinearAlgebra):
 with(linalg):
 with(SolveTools):
@@ -7,15 +6,20 @@ with(ArrayTools):
 with(plottools):
 with(plots):
 
-Digits := 100:
+Digits := 200:
 interface(rtablesize = 100):
+
+
+
+
+
 
 
 
 
 AGenerator := proc(r,t)
 
-	local L,Line1,Line2,Line3;
+	local i,L,Line1,Line2,Line3;
 
 	Line1 := convert(Concatenate(2, Vector[row](<1,0>) ,Vector[row](2*r-2,0) ),list);
 	Line2 := convert(Concatenate(2, Vector[row](<0,1>) ,Vector[row](2*r-2,0) ),list);
@@ -123,7 +127,7 @@ EquatlityConstraintsAGenerator := proc(r,t)
 
 	return Matrix(blockmatrix(1,2,[A,IdentityMatrix(3*r+1)]));
 
-end proc;
+end proc:
 
 
 EquatlityConstraintsBGenerator := proc(r,t)
@@ -132,7 +136,7 @@ local B;
 	B := BGenerator(r,t);
 	return B;
 	
-end proc;
+end proc:
 
 #################################################################################################
 #################################################################################################
@@ -143,7 +147,7 @@ MuBar := proc(z,n,m)
 	x  :=  z(1..n);
 	s  :=  z(n+m+1..2*n+m);
 	return DotProduct(Transpose(x),s) / n
-end proc;
+end proc:
 
 
 IsAdmissible := proc(z, A,b,c, n,m)
@@ -160,7 +164,7 @@ IsAdmissible := proc(z, A,b,c, n,m)
 		if evalf(s(i))<=0 then b3:= false end if;
 		end do;
 	return (b1 and b2 and b3);	
-end proc;
+end proc:
 
 IsInV := proc(theta,z, A,b,c, n,m)
 	
@@ -172,7 +176,7 @@ IsInV := proc(theta,z, A,b,c, n,m)
 	b1:= IsAdmissible(z,A,b,c,n,m);
 	muBar := MuBar(z,n,m);
 	return (b1 and evalb( Norm( Multiply( Matrix(DiagonalMatrix(x)), s) - muBar * Vector(n,1) ,2) <= theta * muBar));
-end proc;
+end proc:
 
 
 
@@ -278,7 +282,7 @@ end proc:
 
 
 SolvePL := proc(n,m,A,z,theta,theta_prime,N)
-	local zz, L, z1;
+	local zz, L, z1,i;
 	L := [z(1..n)]:
 	zz:= z;
 
@@ -290,193 +294,6 @@ SolvePL := proc(n,m,A,z,theta,theta_prime,N)
 end proc:
 
 
-
-
-
-###############################################
-############Defining our problem###################
-###############################################
-
-
-t:=3:
-r:=6:
-
-n := 5*r+1:
-m := 3*r+1:
-lambda:= 0.5:
-theta := 0.25:
-theta_prime := 0.5:
-
-
-
-A := AGenerator(r, t): 
-At := Transpose(A):
-b := BGenerator(r,t):
-c := convert(<1,Vector(2*r-1,0)>,Vector):
-
-
-##Transforming the problem into equality formulation (cf. livre Gilbert)
-
-A_eq := EquatlityConstraintsAGenerator(r,t):
-A_eqt:= Transpose(A_eq):
-b_eq := b:
-c_eq := <c,Vector(3*r+1,0)>:
-
-##Lifting coeff. We use monomial functiuns for puiseux series
-alpha := <2^6,2^6,2^5,2^5,2^4,2^4,2^3,2^3,2^2,2^2,2^1,2^1,2^0,2^0>/(2^8): 
-l := 2.01:
-beta := <l^6, l^6, l^5, l^5, l^5,l^4, l^4, l^4, l^3, l^3, l^3, l^2, l^2, l^2, l, l, l, 1, 1>/(l^7):
-
-
-
-
-Y:= Tropical_y(lambda,r):
-X:= Tropical_x(lambda,r):
-
-f := x -> t^x:
-
-v_y:= convert(map(f, Y),Vector):
-v_x:= convert(map(f, X),Vector):
-
-##Lifted variables
-lifted_x := (alpha *~ v_x):
-lifted_w := (b - A.lifted_x):
-lifted_y := (beta *~ v_y):
-lifted_s := (Multiply(At,lifted_y) + c):
-
-
-## Going to equality problem
-x_eq := convert(<lifted_x,lifted_w>,Vector[column]):
-y_eq := convert(<-lifted_y>,Vector[column]):
-s_eq := convert(<lifted_s,lifted_y>,Vector[column]):
-
-c_eq := convert(<c,Vector[column](3*r+1,0)>,Vector[column]):
-z_eq := convert(<x_eq,y_eq,s_eq>,Vector[column]):
-
-
-
-
-
-##Not working yet (the zero depends on Digits...##############
-IsAdmissible := proc(z, A,b,c, n,m)
-	local x,y,s, b1,b2,b3;
-	x  :=  z(1..n);
-	y  := z(n+1 .. n+m);
-	s  :=  z(n+m+1..2*n+m);
-
-	b1:= Equal(Multiply(A,x) , b);
-	b2:= Equal( Multiply(Transpose(A) , y) + s , c);
-	b3:= true;
-	for i from 1 to n do 
-		if evalf(x(i))<=0 then b3:= false end if;
-		if evalf(s(i))<=0 then b3:= false end if;
-		end do;
-	return (b1 and b2 and b3);	
-end proc;
-
-
-IsInV := proc(theta,z, A,b,c, n,m)
-	
-	local x,y,s, b1,muBar;
-	x  :=  z(1..n);
-	y  := z(n+1 .. n+m);
-	s  :=  z(n+m+1..2*n+m);
-
-	b1:= IsAdmissible(z,A,b,c,n,m);
-	muBar := MuBar(z,n,m);
-	return (b1 and evalb( Norm( Multiply( Matrix(DiagonalMatrix(x)), s) - muBar * Vector(n,1) ,2) <= theta * muBar));
-end proc;
-#############################"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-mu  := evalf(MuBar(z_eq,n,m));
-critereon := evalf(Norm( DiagonalMatrix(x_eq).s_eq - mu.Vector(n,1)  ,2 ) / mu);
-num:=8:
-
-for k from 1 to num do
-
-	dz := GetNewtonDirection(n,m,A_eq,z_eq,mu):
-
-	z    := z_eq + dz:
-	z_eq :=z:
-
-	x_eq  :=  z(1..n):
-	y_eq  :=  z(n+1 .. n+m):
-	s_eq  :=  z(n+m+1..2*n+m):
-
-
-	mu  := evalf(MuBar(z_eq,n,m));
-	critereon := evalf(Norm( DiagonalMatrix(x_eq).s_eq - mu.Vector(n,1)  ,2 ) / mu);
-
-
-	print(critereon):
-
-end do:
-
-
-
-###########################################################
-###########################################################
-###########################################################
-##########################################################
-###########################################################
-###########################################################
-##########################################################
-###########################################################
-###########################################################
-##########################################################
-###########################################################
-###########################################################
-
-
-z := z_eq:
-
-z(n-1..n);
 
 
 
@@ -497,42 +314,273 @@ end proc:
 
 
 
-L:=SolvePL2lastCoor(n,m,A_eq,z,theta,theta_prime, 40):
+
+
+################################
+##############################
+################################
+AlphaGenerator := proc(r,l)
+
+	local alpha,i:
+
+	alpha :=[]:
+
+
+	for i from 1 to r do
+		alpha := [op(alpha),l^(r-i+1),l^(r-i+1)]:
+	end do:
+
+	alpha_vector := convert(alpha,Vector[column]):
+
+	return alpha_vector / (l^(r+1)):
+
+end proc:
+
+
+BetaGenerator := proc(r,l)
+
+	local beta,i:
+
+	beta :=[l^r,l^r]:
+
+	for i from 1 to r-1 do
+
+		beta := [op(beta),l^(r-i),l^(r-i),l^(r-i)]:
+
+	end do:
+
+	beta := [op(beta),1,1]:
+
+	beta_vector := convert(beta,Vector[column]):
+
+	return beta_vector / (l^(r+1)):
+
+end proc:
+
+
+ 
+ 
+
+
+AlphaGenerator := proc(r,l)
+
+	local alpha,i,alpha_vector:
+
+	alpha :=[]:
+
+
+	for i from 1 to r do
+		alpha := [op(alpha),1/2 - l^(-r+i-7),1/2 - l^(-r+i-7)]:
+	end do:
+
+	alpha_vector := convert(alpha,Vector[column]):
+
+	return alpha_vector :
+
+end proc:
+
+
+BetaGenerator := proc(r,l)
+
+	local beta,i,beta_vector:
+
+	beta :=[l^r,l^r]:
+
+	for i from 1 to r-1 do
+
+		beta := [op(beta),l^(r-i),l^(r-i),l^(r-i)]:
+
+	end do:
+
+	beta := [op(beta),1,1]:
+
+	beta_vector := convert(beta,Vector[column]):
+
+	return beta_vector / (l^(r+1)):
+
+end proc:
 
 
 
-## plots points in the path by taking only 2 last coordinates (line)
+Lifter := proc(r,t,lambda,l_alpha,l_beta)
+	
+	local alpha,beta, A_,At_,b_,c_,f,x_trop,y_trop,v_x,v_y,lifted_x,lifted_y,lifted_w,lifted_s,x_eq,y_eq,s_eq,z_eq	:
+
+	alpha := AlphaGenerator(r,l_alpha):
+	beta  := BetaGenerator(r,l_beta):
+
+	A_ := AGenerator(r,t):
+	At_:= Transpose(A_):
+	b_ := BGenerator(r,t):
+	c_ := convert(<1,Vector(2*r-1,0)>,Vector):
+
+	f := x -> t^x:
+
+	x_trop:= Tropical_x(lambda,r):
+	y_trop:= Tropical_y(lambda,r):
+
+	v_x:= convert(map(f, x_trop),Vector):
+	v_y:= convert(map(f, y_trop),Vector):
+
+
+	lifted_x := (alpha *~ v_x):
+	lifted_w := (b_ - A_.lifted_x):
+	lifted_y := (beta *~ v_y):
+	lifted_s := (Multiply(At_,lifted_y) + c_):
+
+
+	x_eq := convert(<lifted_x,lifted_w>,Vector[column]):
+	y_eq := convert(<-lifted_y>,Vector[column]):
+	s_eq := convert(<lifted_s,lifted_y>,Vector[column]):
+
+	z_eq := convert(<x_eq,y_eq,s_eq>,Vector[column]):
+
+
+end proc:
+
+
+
+
+
+
+
+PointInitial:= proc(n,m,z0,A,theta)
+	
+	local x,s,y ,z,z_prime,dz,mu,Cr,i:
+
+
+	z := copy(z0):
+
+	x  :=  convert(z(1..n),Vector[column]):
+	y  :=  convert(z(n+1 .. n+m),Vector[column]):
+	s  :=  convert(z(n+m+1..2*n+m),Vector[column]):
+
+
+	mu  := evalf(MuBar(z,n,m)):
+
+	Cr := evalf(Norm( DiagonalMatrix(x).s - mu.Vector[column](n,1) ,2 ) / mu):
+
+
+
+	while(Cr >= theta ) do
+
+		dz := GetNewtonDirection(n,m,A,z,mu):
+
+		z_prime    := z + dz:
+		
+		z := z_prime:
+
+		x  :=  convert(z(1..n),Vector[column]):
+		y  :=  convert(z(n+1 .. n+m),Vector[column]):
+		s  :=  convert(z(n+m+1..2*n+m),Vector[column]):
+
+		mu  := evalf(MuBar(z,n,m)):
+		Cr := evalf(Norm( DiagonalMatrix(x).s - mu.Vector[column](n,1) ,2 ) / mu):
+
+
+	end do:
+
+	return z:
+
+end proc:
+
+
+###############################################
+############Defining our problem###################
+#########################################################################################################################################################################################################################################################################################################################################
+
+
+lambda:= 2.0:      
+t:=100000000:
+r:=4:
+iter := 43:
+
+n := 5*r+1:
+m := 3*r+1:
+
+ 
+
+theta := 0.25:
+theta_prime := 0.5:
+
+
+A := EquatlityConstraintsAGenerator(r,t):
+At:= Transpose(A):
+b := EquatlityConstraintsBGenerator(r,t):
+c := convert(<1,Vector(n-1,0)>,Vector):
+
+z_eq := Lifter(r,t,lambda,2,2.0001):
+evalf(z_eq,10);
+
+
+evalf(AlphaGenerator(r,2.),3);
+evalf(BetaGenerator(r,2.0001),3);
+
+
+
+z := PointInitial(n,m,z_eq,A,theta):
+
+evalf(z,10);
+
+################################################# PLOT ##############################
+
+
+print("real mu"):
+print(evalf(MuBar(z_eq,n,m),3)):
+print("tropical lambda"):
+print(lambda):
+print("t^l"):
+print(evalf(t^lambda,3)):
+logt := proc (x) return log(x)/log(t) end proc:
+print("logt x"):
+print(evalf(map(logt,lifted_x),3)):
+print("tropical x"):
+print(evalf(X,3)):
+
+
+
+print(evalf(map(logt,x_eq),3)):
+
+
+with(ListTools):
+plotLogpoints := proc (a) 
+	local M, func:
+	func := proc (v) return Reverse(convert(v, list)) end proc; 
+	M := map(func, a); 
+	logplot(M, style = point):
+end proc:
+
+plotLogLogpoints := proc (a) 
+	local M, func; 
+	func := proc (v) return convert(v, list) end proc; 
+	M := map(func, a); 
+	loglogplot(M, style = point);
+end proc:
+
+plotLogtpoints := proc (a) 
+	local M, func, logt;
+	logt := proc(x) return log(x)/log(t) end proc;
+	func := proc (v) return point(map(logt,convert(v, list))) end proc; 
+	M := map(func, a); 
+	display(M);
+end proc;
+
 plot2lastCoor := proc(L)
 	local M, func: 
 	func := proc (x) return convert(x, list) end proc;
 	M:= map(func, L);
 	display(curve(M, color = red, linestyle = dash, thickness = 2));
-	end proc:
+end proc:
+
+
+
+
+
+
+L:=SolvePL2lastCoor(n,m,A,z,theta,theta_prime, iter):
+
 
 plot2lastCoor(L);
-
-
-## plots points in the path by taking only 2 last coordinates (points)
-plotpoints:= proc(a)
-	local M, func;
-	func:= proc(v) return point(convert(v,list),color=magenta,symbolsize=25,symbol=diamond) end proc;
-	M:= map(func, a);
-	display(M);
-	end proc;
-
-plotpoints(L);
-
-
-plotLogpoints := proc (a) 
-local M, func; 
-func := proc (v) return Reverse(convert(v, list)) end proc; 
-M := map(func, a); 
-logplot(M, style = point);
-end proc; 
-
-plotLogpoints(L);
-
-
-
-
+plotLogLogpoints(L):
+plotLogtpoints(L);
 
