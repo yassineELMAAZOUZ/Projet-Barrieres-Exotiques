@@ -510,17 +510,7 @@ b := EquatlityConstraintsBGenerator(r,t):
 c := convert(<1,Vector(n-1,0)>,Vector):
 
 z_eq := Lifter(r,t,lambda,2,2.0001):
-evalf(z_eq,10);
-
-
-evalf(AlphaGenerator(r,2.),3);
-evalf(BetaGenerator(r,2.0001),3);
-
-
-
 z := PointInitial(n,m,z_eq,A,theta):
-
-evalf(z,10);
 
 ################################################# PLOT ##############################
 
