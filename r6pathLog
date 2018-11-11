@@ -312,7 +312,20 @@ SolvePL2lastCoor := proc(n,m,A,z,theta,theta_prime,N)
 	return L:
 end proc:
 
-
+SolvePL2lastCoorTillMu1 := proc(n,m,A,z,theta,theta_prime)
+	local zz, L, z1,i;
+	L := [z(n-1..n)]:
+	zz:= z;
+	i:= 0:
+	while evalf(MuBar(zz,n,m)) >0.9 do
+			i:= i+1:
+			print(i):
+			z1 := GetNextPoint(n,m,A,zz,theta,theta_prime):
+			zz := z1:
+			L := [op(L),zz(n-1..n)]:
+	end do:
+	return L:
+end proc:
 
 
 
@@ -567,8 +580,7 @@ end proc:
 
 
 
-L:=SolvePL2lastCoor(n,m,A,z,theta,theta_prime, iter):
-
+L:=SolvePL2lastCoorTillMu1(n,m,A,z,theta,theta_prime):
 
 plot2lastCoor(L);
 plotLogLogpoints(L):
