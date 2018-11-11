@@ -9,6 +9,15 @@ with(plots):
 Digits := 200:
 interface(rtablesize = 100):
 
+lambda:= 2:      
+t:=100000000:
+r:=4:
+iter := 10:
+
+
+
+
+
 
 
 
@@ -122,7 +131,7 @@ EquatlityConstraintsAGenerator := proc(r,t)
 
 	return Matrix(blockmatrix(1,2,[A,IdentityMatrix(3*r+1)]));
 
-end proc;
+end proc:
 
 
 EquatlityConstraintsBGenerator := proc(r,t)
@@ -131,7 +140,7 @@ local B;
 	B := BGenerator(r,t);
 	return B;
 	
-end proc;
+end proc:
 
 #################################################################################################
 #################################################################################################
@@ -142,7 +151,7 @@ MuBar := proc(z,n,m)
 	x  :=  z(1..n);
 	s  :=  z(n+m+1..2*n+m);
 	return DotProduct(Transpose(x),s) / n
-end proc;
+end proc:
 
 
 IsAdmissible := proc(z, A,b,c, n,m)
@@ -159,7 +168,7 @@ IsAdmissible := proc(z, A,b,c, n,m)
 		if evalf(s(i))<=0 then b3:= false end if;
 		end do;
 	return (b1 and b2 and b3);	
-end proc;
+end proc:
 
 IsInV := proc(theta,z, A,b,c, n,m)
 	
@@ -171,7 +180,7 @@ IsInV := proc(theta,z, A,b,c, n,m)
 	b1:= IsAdmissible(z,A,b,c,n,m);
 	muBar := MuBar(z,n,m);
 	return (b1 and evalb( Norm( Multiply( Matrix(DiagonalMatrix(x)), s) - muBar * Vector(n,1) ,2) <= theta * muBar));
-end proc;
+end proc:
 
 
 
@@ -269,7 +278,6 @@ GetNextPoint := proc(n,m,A,z,theta,theta_prime)
 	d_prime := GetNewtonDirection(n,m,A,z_prime,MuBar(z_prime,n,m)):
 	z_plus := z_prime + d_prime:
 
-	print(evalf(MuBar(z_plus,n,m),10)):
 	return evalf(z_plus):
 
 end proc:
@@ -278,7 +286,7 @@ end proc:
 
 
 SolvePL := proc(n,m,A,z,theta,theta_prime,N)
-	local zz, L, z1;
+	local zz, L, z1,i;
 	L := [z(1..n)]:
 	zz:= z;
 
@@ -317,7 +325,7 @@ end proc:
 ################################
 AlphaGenerator := proc(r,l)
 
-	local alpha:
+	local alpha,i:
 
 	alpha :=[]:
 
@@ -335,7 +343,7 @@ end proc:
 
 BetaGenerator := proc(r,l)
 
-	local beta:
+	local beta,i:
 
 	beta :=[l^r,l^r]:
 
@@ -360,25 +368,25 @@ end proc:
 
 AlphaGenerator := proc(r,l)
 
-	local alpha:
+	local alpha,i,alpha_vector:
 
 	alpha :=[]:
 
 
 	for i from 1 to r do
-		alpha := [op(alpha),l^(r-i+1),l^(r-i+1)]:
+		alpha := [op(alpha),1/2 - l^(-r+i-1),1/2 - l^(-r+i-1)]:
 	end do:
 
 	alpha_vector := convert(alpha,Vector[column]):
 
-	return alpha_vector / (l^(r+2)):
+	return alpha_vector :
 
 end proc:
 
 
 BetaGenerator := proc(r,l)
 
-	local beta:
+	local beta,i,beta_vector:
 
 	beta :=[l^r,l^r]:
 
@@ -483,17 +491,16 @@ end proc:
 
 ###############################################
 ############Defining our problem###################
-###############################################
+#########################################################################################################################################################################################################################################################################################################################################
 
 
 
-t:=3;
-r:=3:
+
 
 n := 5*r+1:
 m := 3*r+1:
 
-lambda:= 1.8:
+ 
 
 theta := 0.25:
 theta_prime := 0.5:
@@ -505,26 +512,40 @@ b := EquatlityConstraintsBGenerator(r,t):
 c := convert(<1,Vector(n-1,0)>,Vector):
 
 z_eq := Lifter(r,t,lambda,2,2.01):
-print(evalf(MuBar(z_eq,n,m),10));
+
 z    := PointInitial(n,m,z_eq,A,theta):
 ################################################# PLOT ##############################
 
+print("real mu"):
+print(evalf(MuBar(z_eq,n,m),3)):
+print("tropical lambda"):
+print(lambda):
+print("t^l"):
+print(evalf(t^lambda,3)):
+logt := proc (x) return log(x)/log(t) end proc:
+print("logt x"):
+print(evalf(map(logt,lifted_x),3)):
+print("tropical x"):
+print(evalf(X,3)):
 
+
+
+print(evalf(map(logt,x_eq),3)):
 
 
 with(ListTools):
 plotLogpoints := proc (a) 
-	local M, func; 
+	local M, func:
 	func := proc (v) return Reverse(convert(v, list)) end proc; 
 	M := map(func, a); 
-	logplot(M, style = point);
-end proc; 
+	logplot(M, style = point):
+end proc:
 
 
 
 
 
-L:=SolvePL2lastCoor(n,m,A,z,theta,theta_prime, 7):
+L:=SolvePL2lastCoor(n,m,A,z,theta,theta_prime, iter):
 
 
 
@@ -537,9 +558,9 @@ plotLogLogpoints := proc (a)
 	func := proc (v) return convert(v, list) end proc; 
 	M := map(func, a); 
 	loglogplot(M, style = point);
-end proc; 
+end proc:
 
-plotLogLogpoints(L);
+plotLogLogpoints(L):
 
 
 
@@ -552,3 +573,15 @@ L:=SolvePL2lastCoor(n,m,A,z,theta,theta_prime, 7):
 
 plotLogLogpoints(L);
 
+
+
+plotLogtpoints := proc (a) 
+	local M, func, logt;
+	logt := proc(x) return log(x)/log(t) end proc;
+	func := proc (v) return point(map(logt,convert(v, list))) end proc; 
+	M := map(func, a); 
+	display(M);
+end proc; 
+
+with(ListTools):
+plotLogtpoints(L);
