@@ -9,6 +9,10 @@ with(plots):
 Digits := 200:
 interface(rtablesize = 100):
 
+lambda:= 2.0:      
+t:=1000000000:
+r:=4:
+iter := 43:
 
 
 
@@ -150,37 +154,6 @@ MuBar := proc(z,n,m)
 end proc:
 
 
-IsAdmissible := proc(z, A,b,c, n,m)
-	local x,y,s, b1,b2,b3;
-	x  :=  z(1..n);
-	y  := z(n+1 .. n+m);
-	s  :=  z(n+m+1..2*n+m);
-
-	b1:= Equal(Multiply(A,x) , b);
-	b2:= Equal( Multiply(Transpose(A) , y) + s , c);
-	b3:= true;
-	for i from 1 to n do 
-		if evalf(x(i))<=0 then b3:= false end if;
-		if evalf(s(i))<=0 then b3:= false end if;
-		end do;
-	return (b1 and b2 and b3);	
-end proc:
-
-IsInV := proc(theta,z, A,b,c, n,m)
-	
-	local x,y,s, b1,muBar;
-	x  :=  z(1..n);
-	y  := z(n+1 .. n+m);
-	s  :=  z(n+m+1..2*n+m);
-
-	b1:= IsAdmissible(z,A,b,c,n,m);
-	muBar := MuBar(z,n,m);
-	return (b1 and evalb( Norm( Multiply( Matrix(DiagonalMatrix(x)), s) - muBar * Vector(n,1) ,2) <= theta * muBar));
-end proc:
-
-
-
-
 NewtonMatrix := proc(n,m,A,z)
 	local x,s, X,S;
 	x  :=  z(1..n):
@@ -299,7 +272,7 @@ end proc:
 
 ## Returns list of points in the path by taking only 2 last coordinates
 SolvePL2lastCoor := proc(n,m,A,z,theta,theta_prime,N)
-	local zz, L, z1;
+	local zz, L, z1,i;
 	L := [z(n-1..n)]:
 	zz:= z;
 
@@ -328,13 +301,42 @@ SolvePL2lastCoorTillMu1 := proc(n,m,A,z,theta,theta_prime)
 end proc:
 
 
+SolvePL2lastCoorTillMu1WithPredictionAndCorrection := proc(n,m,A,z,theta,theta_prime)
+	local zz, Lp,Lc, z1,i;
+	local d,rho,z_prime, d_prime,z_plus:
+	Lp := [z(n-1..n)]:
+	Lc := []:
+	zz:= z;
+	i:= 0:
+	while evalf(MuBar(zz,n,m)) >0.9 do
+			i:= i+1:
+			print(i):
+			
+			########## Prediction ###########
+			d := GetNewtonDirection(n,m,A,zz,0):
+			rho := GetMaxAlpha(n,m,zz,d,theta_prime);
+			z_prime := zz + rho.d:
+			Lp := [op(Lp),evalf(z_prime(n-1..n))]:
+			
+			########## Correction ############
+			d_prime := GetNewtonDirection(n,m,A,z_prime,MuBar(z_prime,n,m)):
+			z_plus := z_prime + d_prime:
+			Lc := [op(Lc),evalf(z_plus(n-1..n))]:
+			
+			zz := evalf(z_plus):			
+	end do:
+	return [Lp,Lc]:
+end proc:
+
+
+
 
 ################################
 ##############################
 ################################
 AlphaGenerator := proc(r,l)
 
-	local alpha,i:
+	local alpha,i,alpha_vector:
 
 	alpha :=[]:
 
@@ -352,7 +354,7 @@ end proc:
 
 BetaGenerator := proc(r,l)
 
-	local beta,i:
+	local beta,i,beta_vector:
 
 	beta :=[l^r,l^r]:
 
@@ -503,10 +505,6 @@ end proc:
 #########################################################################################################################################################################################################################################################################################################################################
 
 
-lambda:= 2.0:      
-t:=100000000:
-r:=4:
-iter := 43:
 
 n := 5*r+1:
 m := 3*r+1:
@@ -565,8 +563,8 @@ plotLogtpoints := proc (a)
 	logt := proc(x) return log(x)/log(t) end proc;
 	func := proc (v) return point(map(logt,convert(v, list))) end proc; 
 	M := map(func, a); 
-	display(M);
-end proc;
+	display(M);	
+end proc:
 
 plot2lastCoor := proc(L)
 	local M, func: 
@@ -576,13 +574,38 @@ plot2lastCoor := proc(L)
 end proc:
 
 
+plotLogtpointsPredictionAndCorrection := proc (a,b) 
+	local M, func, logt,func_r,func_b,Mp,Mc;
+	logt := proc(x) return log(x)/log(t) end proc;
+	func_r := proc (v) return point(map(logt,convert(v, list)), color=red) end proc; 
+	func_b := proc (v) return point(map(logt,convert(v, list)), color=blue) end proc; 
+	Mp := map(func_r, a): 
+	Mc := map(func_b, b):
+	display([op(Mp),op(Mc)]);
+
+end proc:
 
 
 
+L:=SolvePL2lastCoorTillMu1WithPredictionAndCorrection(n,m,A,z,theta,theta_prime):
+Lc:=L[2]:
+Lp:=L[1]:
 
-L:=SolvePL2lastCoorTillMu1(n,m,A,z,theta,theta_prime):
+plotLogtpointsPredictionAndCorrection(Lp,Lc);
 
-plot2lastCoor(L);
-plotLogLogpoints(L):
-plotLogtpoints(L);
 
+
+tropicalPath := proc(u,d,num,r)
+	local step,k,L,M,func:
+	step:= (u-d)/num:
+	L:=[]:
+	for k from 1 to num do
+		L:=[op(L),Tropical_x(d+k*step,r)(2*r-1..2*r)]:
+	end do:
+	
+	func := proc (x) return convert(x, list) end proc;
+	M:= map(func, L):
+	display(curve(M, color = red, linestyle = dash, thickness = 2));
+end proc:
+
+tropicalPath(2,0,400,r);
