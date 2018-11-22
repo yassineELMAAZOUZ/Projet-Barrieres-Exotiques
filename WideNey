@@ -6,7 +6,7 @@ with(ArrayTools):
 with(plottools):
 with(plots):
 
-Digits := 200:
+Digits := 50:
 interface(rtablesize = 100):
 
 lambda:= 2.0:  
@@ -326,13 +326,17 @@ SolvePL2lastCoorTillMu1WithPredictionAndCorrection := proc(n,m,A,z,theta,theta_p
 			rho := GetMaxAlpha(n,m,zz,d,theta_prime);
 			z_prime := zz + rho.d:
 			Lp := [op(Lp),evalf(z_prime(n-1..n))]:
-			print("pred norme"):
+			
+			print("prediction criterion (should be equal to theta_prime)"):
 			print(evalf(Criterion(z_prime,n,m),3)):
+			
+			
 			########## Correction ############
 			d_prime := GetNewtonDirection(n,m,A,z_prime,MuBar(z_prime,n,m)):
 			z_plus := z_prime + d_prime:
 			Lc := [op(Lc),evalf(z_plus(n-1..n))]:
-			print("ker norme"):
+			
+			print("Correction criterion (shoud be less than theta)"):
 			print(evalf(Criterion(z_plus,n,m),3)):
 			zz := evalf(z_plus):			
 	end do:
@@ -546,12 +550,6 @@ print(evalf(t^lambda,3)):
 logt := proc (x) return log(x)/log(t) end proc:
 print("logt x"):
 print(evalf(map(logt,lifted_x),3)):
-print("tropical x"):
-print(evalf(X,3)):
-
-
-
-print(evalf(map(logt,x_eq),3)):
 
 
 with(ListTools):
