@@ -12,11 +12,6 @@ interface(rtablesize = 100):
 lambda:= 2.0:  
 t:=100000000:
 r:=4:
-iter := 43:
-
-
-
-
 
 Criterion := proc(z,n,m)
 	local res,i,x,s,mu:	
