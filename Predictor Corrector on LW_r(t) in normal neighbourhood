@@ -12,13 +12,6 @@ interface(rtablesize = 100):
 lambda:= 2.0:      
 t:=1000000000:
 r:=4:
-iter := 43:
-
-
-
-
-
-
 
 
 AGenerator := proc(r,t)
