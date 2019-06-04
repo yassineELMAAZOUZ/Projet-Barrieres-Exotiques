@@ -9,11 +9,11 @@ with(plots):
 Digits := 200:
 interface(rtablesize = 100):
 
-lambda:= 2.0:      
-t:=1000000000:
-r:=4:
+lambda:= 2.0:   #tropical parameter   
+t:=10^100:      #parameter t, for big values of r, you will need to increase t
+r:=5:   	# parameter r
 
-
+# A function to generated the matrix A for inequality constraintes
 AGenerator := proc(r,t)
 
 	local i,L,Line1,Line2,Line3;
@@ -48,14 +48,14 @@ AGenerator := proc(r,t)
 	
 end proc:
 
-
+# A function to generated the vector b for inequality constraintes
 BGenerator := proc(r,t)
 
 	return Concatenate(1,Vector[column](<t^2,t>),Vector[column](3*r-1,0));
 	
 end proc:
 
-
+# A function to compute the part x in the primal-dual point in tropical central path corresponding to parameter lambda
 Tropical_x := proc(lambda,r)
 	
 
@@ -83,7 +83,7 @@ Tropical_x := proc(lambda,r)
 
 end proc:
 
-
+# A function to compute the part y in the primal-dual point in tropical central path corresponding to parameter lambda
 Tropical_y:= proc(lambda,r)
 	
 	local j,x,y ;
@@ -112,11 +112,7 @@ end proc:
 
 
 
-
-
-
-
-
+# A function to generated the matrix A for equality constraintes (corresponds to adding slack variables)
 EquatlityConstraintsAGenerator := proc(r,t)
 	local A;
 	
@@ -126,19 +122,21 @@ EquatlityConstraintsAGenerator := proc(r,t)
 
 end proc:
 
-
+# A function to generated the vector b for equality constraintes (same as the old one)
 EquatlityConstraintsBGenerator := proc(r,t)
-	
 local B;
 	B := BGenerator(r,t);
 	return B;
 	
 end proc:
 
-#################################################################################################
-#################################################################################################
-#################################################################################################
 
+
+
+#################################################################################################
+#################################################################################################
+#################################################################################################
+#duality measure
 MuBar := proc(z,n,m)
 	local x,s;
 	x  :=  z(1..n);
@@ -146,7 +144,7 @@ MuBar := proc(z,n,m)
 	return DotProduct(Transpose(x),s) / n
 end proc:
 
-
+#Newton matrix to compute newton direction
 NewtonMatrix := proc(n,m,A,z)
 	local x,s, X,S;
 	x  :=  z(1..n):
@@ -160,7 +158,7 @@ NewtonMatrix := proc(n,m,A,z)
 end proc: 
 
 
-
+#A function that computes newton direction given a point
 GetNewtonDirection := proc(n,m,A,z,mu)
 	
 	local x,s, M,X,e,Vect;
@@ -178,7 +176,7 @@ GetNewtonDirection := proc(n,m,A,z,mu)
 end proc:
 
 
-
+#function to compute the maximal size of the step to take.
 GetMaxAlpha := proc(n,m,z,dz,theta_prime)
 
 	local dx,dX,ds,dS,x,X,s,S,e, v1,v2,v3,a0,a1,a2,a3,a4, Sol;
@@ -221,7 +219,7 @@ end	proc:
 
 
 
-
+# A function that updates the current point
 GetNextPoint := proc(n,m,A,z,theta,theta_prime)
 
 	########## Prediction ###########
@@ -246,7 +244,7 @@ end proc:
 	
 
 
-
+## The predictor-corrector solver
 SolvePL := proc(n,m,A,z,theta,theta_prime,N)
 	local zz, L, z1,i;
 	L := [z(1..n)]:
@@ -278,6 +276,7 @@ SolvePL2lastCoor := proc(n,m,A,z,theta,theta_prime,N)
 	return L:
 end proc:
 
+## A function that follows the path until mu = 1
 SolvePL2lastCoorTillMu1 := proc(n,m,A,z,theta,theta_prime)
 	local zz, L, z1,i;
 	L := [z(n-1..n)]:
@@ -293,7 +292,7 @@ SolvePL2lastCoorTillMu1 := proc(n,m,A,z,theta,theta_prime)
 	return L:
 end proc:
 
-
+## A function that follows the path until mu = 1, but returns both prediction and correction points.
 SolvePL2lastCoorTillMu1WithPredictionAndCorrection := proc(n,m,A,z,theta,theta_prime)
 	local zz, Lp,Lc, z1,i;
 	local d,rho,z_prime, d_prime,z_plus:
@@ -327,49 +326,8 @@ end proc:
 ################################
 ##############################
 ################################
-AlphaGenerator := proc(r,l)
 
-	local alpha,i,alpha_vector:
-
-	alpha :=[]:
-
-
-	for i from 1 to r do
-		alpha := [op(alpha),l^(r-i+1),l^(r-i+1)]:
-	end do:
-
-	alpha_vector := convert(alpha,Vector[column]):
-
-	return alpha_vector / (l^(r+1)):
-
-end proc:
-
-
-BetaGenerator := proc(r,l)
-
-	local beta,i,beta_vector:
-
-	beta :=[l^r,l^r]:
-
-	for i from 1 to r-1 do
-
-		beta := [op(beta),l^(r-i),l^(r-i),l^(r-i)]:
-
-	end do:
-
-	beta := [op(beta),1,1]:
-
-	beta_vector := convert(beta,Vector[column]):
-
-	return beta_vector / (l^(r+1)):
-
-end proc:
-
-
- 
- 
-
-
+# A function to generate liftings of the point x
 AlphaGenerator := proc(r,l)
 
 	local alpha,i,alpha_vector:
@@ -387,7 +345,7 @@ AlphaGenerator := proc(r,l)
 
 end proc:
 
-
+# A function to generate lifting coefficients of the point y.
 BetaGenerator := proc(r,l)
 
 	local beta,i,beta_vector:
@@ -409,7 +367,7 @@ BetaGenerator := proc(r,l)
 end proc:
 
 
-
+## A function that lifts points of tropical central path given lambda, t , and lifting coeffs
 Lifter := proc(r,t,lambda,l_alpha,l_beta)
 	
 	local alpha,beta, A_,At_,b_,c_,f,x_trop,y_trop,v_x,v_y,lifted_x,lifted_y,lifted_w,lifted_s,x_eq,y_eq,s_eq,z_eq	:
@@ -451,7 +409,7 @@ end proc:
 
 
 
-
+# A function to compute an initial point to start the algorithm from.
 PointInitial:= proc(n,m,z0,A,theta)
 	
 	local x,s,y ,z,z_prime,dz,mu,Cr,i:
@@ -493,8 +451,11 @@ PointInitial:= proc(n,m,z0,A,theta)
 end proc:
 
 
-###############################################
-############Defining our problem###################
+
+
+
+############################################################
+############ .  Defining our problem variables.   ###################
 #########################################################################################################################################################################################################################################################################################################################################
 
 
@@ -508,16 +469,17 @@ theta := 0.25:
 theta_prime := 0.5:
 
 
-A := EquatlityConstraintsAGenerator(r,t):
-At:= Transpose(A):
-b := EquatlityConstraintsBGenerator(r,t):
-c := convert(<1,Vector(n-1,0)>,Vector):
+A := EquatlityConstraintsAGenerator(r,t):    # matrix of equality constraints
+At:= Transpose(A):    			     # transpose of A for the dual problem
+b := EquatlityConstraintsBGenerator(r,t):    # vector of equality constraints
+c := convert(<1,Vector(n-1,0)>,Vector):      # cost vector
 
-z_eq := Lifter(r,t,lambda,2,2.0001):
-z := PointInitial(n,m,z_eq,A,theta):
+z_eq := Lifter(r,t,lambda,2,2.0001):         # a lifted point from the central path using specific choice of params 
+z := PointInitial(n,m,z_eq,A,theta):	     # a point that is both in the feasible set and in the neighbourhood of the central path
 
 ################################################# PLOT ##############################
 
+## printing a bunch of information 
 
 print("real mu"):
 print(evalf(MuBar(z_eq,n,m),3)):
@@ -536,6 +498,7 @@ print(evalf(X,3)):
 print(evalf(map(logt,x_eq),3)):
 
 
+################### Plotting functions ################
 with(ListTools):
 plotLogpoints := proc (a) 
 	local M, func:
@@ -578,17 +541,7 @@ plotLogtpointsPredictionAndCorrection := proc (a,b)
 
 end proc:
 
-
-
-L:=SolvePL2lastCoorTillMu1WithPredictionAndCorrection(n,m,A,z,theta,theta_prime):
-Lc:=L[2]:
-Lp:=L[1]:
-
-plotLogtpointsPredictionAndCorrection(Lp,Lc);
-
-
-
-tropicalPath := proc(u,d,num,r)
+plotTropicalPath := proc(u,d,num,r)
 	local step,k,L,M,func:
 	step:= (u-d)/num:
 	L:=[]:
@@ -601,4 +554,20 @@ tropicalPath := proc(u,d,num,r)
 	display(curve(M, color = red, linestyle = dash, thickness = 2));
 end proc:
 
-tropicalPath(2,0,400,r);
+
+L:=SolvePL2lastCoorTillMu1WithPredictionAndCorrection(n,m,A,z,theta,theta_prime):
+Lc:=L[2]:
+Lp:=L[1]:
+
+plotLogtpointsPredictionAndCorrection(Lp,Lc);
+
+plotTropicalPath(2,0,400,r);
+
+
+
+
+
+
+
+
+
