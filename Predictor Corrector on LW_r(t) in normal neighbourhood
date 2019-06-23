@@ -563,11 +563,3 @@ plotLogtpointsPredictionAndCorrection(Lp,Lc);
 
 plotTropicalPath(2,0,400,r);
 
-
-
-
-
-
-
-
-
