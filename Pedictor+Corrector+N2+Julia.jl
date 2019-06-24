@@ -4,7 +4,7 @@ import Distances
 using Plots
 
 
-setprecision(2^12)
+setprecision(1000)
 
 function LW_ineq(r,t)
 
@@ -263,12 +263,9 @@ function solve_until_mu_1(n,m,A,z,theta,theta_p)
         append!(corrections,[z_p[n-1:n]])
 
         #################
-
         mu = mu_bar(z_p,n,m)
 
-
         println("iteration number: ", iteration)
-        println("value of mu     : ", mu)
 
     end
 
@@ -280,7 +277,7 @@ end
 
 
 r = 6
-t = big(10.0^10)
+t = big(10.0^30)
 lambda = big(2.0)
 
 n = 5r+1
@@ -306,3 +303,14 @@ for i = 1:q
     Prediction_Data[1:2,i] = predictions[i]
     Correction_Data[1:2,i] = corrections[i]
 end
+
+
+g(elem) = log(elem)/log(t)
+
+Prediction_Data = map(g,Prediction_Data)
+Correction_Data = map(g,Correction_Data)
+
+
+plotly()
+
+plot(Correction_Data[1,1:q], Correction_Data[1,1:q])
