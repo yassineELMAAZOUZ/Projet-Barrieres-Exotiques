@@ -242,8 +242,9 @@ end
 
 function solve_until_mu_1(n::Int64,m::Int64,A::Array{BigFloat},z::Array{BigFloat},theta::Float64,theta_p::Float64)
 
-    predictions = []
-    corrections = []
+    x_corrections = []
+    y_corrections = []
+
 
     iteration = 0
 
@@ -259,32 +260,36 @@ function solve_until_mu_1(n::Int64,m::Int64,A::Array{BigFloat},z::Array{BigFloat
         d = get_Newton_direction(n,m,A,z_p,mu)
         alpha = get_max_step(n,m,z_p,d,theta_p)
         z_p = z_p + alpha * d
-        append!(predictions, [z_p[n-1:n]])
+#        append!(predictions, [z_p[n-1:n]])
         println("--------------iteration number-----------------: ", iteration)
-        @printf("d[1]  %.5E \n", d[1])
-        @printf("d[2]  %.5E \n", d[2])
-        @printf("d[3]  %.5E \n", d[3])
+        @printf("d[n-1]  %.5E \n", d[n-1])
+        @printf("d[n] %.5E \n", d[n])
 
         println()
         @printf("alpha =  %.5E \n", alpha)
+        println()
+
+
+        @printf("z_p[n-1]  %.5E \n", z_p[n-1])
+        @printf("z_p[n]  %.5E \n", z_p[n])
+
         println()
         #### Correction ####
         mu = mu_bar(z_p,n,m)
         d = get_Newton_direction(n,m,A,z_p,mu)
         z_p = z_p + d
-        append!(corrections,[z_p[n-1:n]])
-
+        append!(x_corrections,z_p[n-1])
+        append!(y_corrections,z_p[n])
         #################
         mu = mu_bar(z_p,n,m)
 
-        @printf("d[1]  %.5E \n", d[1])
-        @printf("d[2]  %.5E \n", d[2])
-        @printf("d[3]  %.5E \n", d[3])
+        @printf("d[n-1]  %.5E \n", d[n-1])
+        @printf("d[n] %.5E \n", d[n])
 
         println()
 
-        @printf("z[n-1]  %.5E \n", d[1])
-        @printf("z[n]  %.5E \n", d[2])
+        @printf("z_p[n-1]  %.5E \n", z_p[n-1])
+        @printf("z_p[n]  %.5E \n", z_p[n])
 
         @printf("mu %.5E", mu)
         println()
@@ -292,18 +297,16 @@ function solve_until_mu_1(n::Int64,m::Int64,A::Array{BigFloat},z::Array{BigFloat
         println()
         println()
 
-
-
     end
 
-    return predictions,corrections
+    return x_corrections,y_corrections
 
 end
 
 
 
 
-r = 3
+r = 5
 t = big(10.0^40)
 lambda = big(2.0)
 
@@ -325,4 +328,20 @@ println("----- Initilisation ----- ")
 
 
 
-predictions, corrections = solve_until_mu_1(n,m,A,z,theta,theta_p)
+x_corrections, y_corrections  = solve_until_mu_1(n,m,A,z,theta,theta_p)
+
+q = size(x_corrections)[1]
+
+
+log_t_X = zeros(BigFloat,q)
+log_t_Y = zeros(BigFloat,q)
+
+for i = 1:q
+
+    log_t_X[i] = log(x_corrections[i]) / log(t)
+    log_t_Y[i] = log(y_corrections[i]) / log(t)
+
+end
+
+
+scatter(log_t_X, log_t_Y)
