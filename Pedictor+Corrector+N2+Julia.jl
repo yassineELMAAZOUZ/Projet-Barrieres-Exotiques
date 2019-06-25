@@ -2,10 +2,10 @@ using LinearAlgebra
 using PolynomialRoots
 import Distances
 using Plots
-using Traceur
+using Printf
 
 
-setprecision(1000)
+setprecision(10000)
 
 function LW_ineq(r::Int64,t::BigFloat)
 
@@ -135,22 +135,27 @@ function get_max_step(n::Int64,m::Int64,z::Array{BigFloat},dz::Array{BigFloat},t
 
     P = [a_0,a_1,a_2,a_3,a_4]
 
-    alpha = - Inf
-    bool = false
+    RealSols = zeros(Float64,4)
 
-    for a in PolynomialRoots.roots(P)
-        if abs(Complex(a).im) <= 10.0^(-10)
-            bool = true
-            alpha = max(alpha, Complex(a).re)
+    for i = 1:4
+        a = Complex(PolynomialRoots.roots(P)[i])
+        if abs(a.im) <= 10.0^(-10)
+            if a.re <= 1
+                RealSols[i] = a.re
+            end
         end
     end
 
-    if bool == false
-        print("Roots are:", roots(P))
-        throw("No real soution found")
-    else
-        return alpha
+
+
+    if size(RealSols)[1] == 0
+        throw("No real solution found !")
     end
+
+    RealSols = sort(RealSols)
+
+    return RealSols[4]
+
 
 end
 
@@ -255,8 +260,14 @@ function solve_until_mu_1(n::Int64,m::Int64,A::Array{BigFloat},z::Array{BigFloat
         alpha = get_max_step(n,m,z_p,d,theta_p)
         z_p = z_p + alpha * d
         append!(predictions, [z_p[n-1:n]])
+        println("--------------iteration number-----------------: ", iteration)
+        @printf("d[1]  %.5E \n", d[1])
+        @printf("d[2]  %.5E \n", d[2])
+        @printf("d[3]  %.5E \n", d[3])
 
-
+        println()
+        @printf("alpha =  %.5E \n", alpha)
+        println()
         #### Correction ####
         mu = mu_bar(z_p,n,m)
         d = get_Newton_direction(n,m,A,z_p,mu)
@@ -266,7 +277,22 @@ function solve_until_mu_1(n::Int64,m::Int64,A::Array{BigFloat},z::Array{BigFloat
         #################
         mu = mu_bar(z_p,n,m)
 
-        println("iteration number: ", iteration)
+        @printf("d[1]  %.5E \n", d[1])
+        @printf("d[2]  %.5E \n", d[2])
+        @printf("d[3]  %.5E \n", d[3])
+
+        println()
+
+        @printf("z[n-1]  %.5E \n", d[1])
+        @printf("z[n]  %.5E \n", d[2])
+
+        @printf("mu %.5E", mu)
+        println()
+        println()
+        println()
+        println()
+
+
 
     end
 
@@ -277,41 +303,26 @@ end
 
 
 
-r = 6
-t = big(10.0^30)
+r = 3
+t = big(10.0^40)
 lambda = big(2.0)
 
 n = 5r+1
 m = 3r+1
 
-theta = big(0.25)
-theta_p = big(0.5)
+theta = 0.25
+theta_p = 0.5
 
 A,b,c = LW_eq(r,t)
 
-z_0 = lifter(r,t,lambda,big(2.0),big(2.0001))
-z = initializer(n,m,z_0,A,theta)
+z = lifter(r,t,lambda,2.0,2.0001)
+z = initializer(n,m,z,A,theta)
+
+println("----- Initilisation ----- ")
+@printf("z[n-1]  %.5E \n", z[n-1])
+@printf("z[n]  %.5E \n", z[n])
+
+
 
 
 predictions, corrections = solve_until_mu_1(n,m,A,z,theta,theta_p)
-
-q = size(predictions)[1]
-
-Prediction_Data = Array{BigFloat}(undef,2,q)
-Correction_Data = Array{BigFloat}(undef,2,q)
-
-for i = 1:q
-    Prediction_Data[1:2,i] = predictions[i]
-    Correction_Data[1:2,i] = corrections[i]
-end
-
-
-g(elem) = log(elem)/log(t)
-
-Prediction_Data = map(g,Prediction_Data)
-Correction_Data = map(g,Correction_Data)
-
-
-plotly()
-
-scatter(Correction_Data[1,1:q], Correction_Data[1,1:q])
