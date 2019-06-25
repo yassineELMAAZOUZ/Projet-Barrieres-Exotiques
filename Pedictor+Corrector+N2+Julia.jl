@@ -2,11 +2,12 @@ using LinearAlgebra
 using PolynomialRoots
 import Distances
 using Plots
+using Traceur
 
 
 setprecision(1000)
 
-function LW_ineq(r,t)
+function LW_ineq(r::Int64,t::BigFloat)
 
     A = zeros(BigFloat, 3r+1,2r)
     b = zeros(BigFloat, 3r+1,1)
@@ -32,7 +33,7 @@ end
 
 
 
-function LW_eq(r,t)
+function LW_eq(r::Int64,t::BigFloat)
 
     A,b,c = LW_ineq(r,t)
 
@@ -82,7 +83,7 @@ function mu_bar(z,n::Int64,m::Int64)
 
 end
 
-function Newton_matrix(n::Int64,m::Int64,A,z)
+function Newton_matrix(n::Int64,m::Int64,A::Array{BigFloat},z::Array{BigFloat})
 
     X , S = Diagonal(z[1:n]),  Diagonal(z[n+m+1:2n + m] );
 
@@ -100,7 +101,7 @@ function Newton_matrix(n::Int64,m::Int64,A,z)
 
 end
 
-function get_Newton_direction(n,m,A,z,mu)
+function get_Newton_direction(n::Int64,m::Int64,A::Array{BigFloat},z::Array{BigFloat},mu=BigFloat)
 
     x,s = z[1:n], z[n+m+1:2n + m]
     M = Newton_matrix(n,m,A,z)
@@ -114,7 +115,7 @@ function get_Newton_direction(n,m,A,z,mu)
     return d
 end
 
-function get_max_step(n,m,z,dz,theta_p)
+function get_max_step(n::Int64,m::Int64,z::Array{BigFloat},dz::Array{BigFloat},theta_p::Float64)
 
     dx, ds = dz[1:n], dz[n+m+1:2n + m]
     dX, dS = Diagonal(dx), Diagonal(ds)
@@ -154,7 +155,7 @@ function get_max_step(n,m,z,dz,theta_p)
 end
 
 
-function lifting_coefs(r,l_alpha,l_beta)
+function lifting_coefs(r::Int64,l_alpha::Float64,l_beta::Float64)
 
     alpha = zeros(BigFloat,2r)
     beta = zeros(BigFloat,3r+1)
@@ -179,7 +180,7 @@ function lifting_coefs(r,l_alpha,l_beta)
 end
 
 
-function lifter(r,t,lambda,l_alpha, l_beta)
+function lifter(r::Int64,t::BigFloat,lambda::BigFloat,l_alpha::Float64, l_beta::Float64)
 
     alpha, beta = lifting_coefs(r,l_alpha,l_beta)
     A,b,c = LW_ineq(r,t)
@@ -206,7 +207,7 @@ end
 
 
 
-function initializer(n,m,z_0,A,theta)
+function initializer(n::Int64,m::Int64,z_0::Array{BigFloat},A::Array{BigFloat},theta::Float64)
 
     z = copy(z_0)
     x, s = z[1:n], z[n+m+1:2n + m]
@@ -234,7 +235,7 @@ function initializer(n,m,z_0,A,theta)
 end
 
 
-function solve_until_mu_1(n,m,A,z,theta,theta_p)
+function solve_until_mu_1(n::Int64,m::Int64,A::Array{BigFloat},z::Array{BigFloat},theta::Float64,theta_p::Float64)
 
     predictions = []
     corrections = []
@@ -313,4 +314,4 @@ Correction_Data = map(g,Correction_Data)
 
 plotly()
 
-plot(Correction_Data[1,1:q], Correction_Data[1,1:q])
+scatter(Correction_Data[1,1:q], Correction_Data[1,1:q])
