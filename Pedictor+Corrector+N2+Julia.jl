@@ -5,8 +5,9 @@ using Plots
 using Printf
 
 
-setprecision(10000)
+setprecision(10000)  #### Set the precision of computations
 
+ #function to generate the inequality constraintes Linear Program
 function LW_ineq(r::Int64,t::BigFloat)
 
     A = zeros(BigFloat, 3r+1,2r)
@@ -32,7 +33,7 @@ end
 
 
 
-
+#function to generate the equality constraintes Linear Program (which is the context in J.C. Gilbert's book)
 function LW_eq(r::Int64,t::BigFloat)
 
     A,b,c = LW_ineq(r,t)
@@ -50,6 +51,7 @@ function LW_eq(r::Int64,t::BigFloat)
 end
 
 
+# a function to generate tropical x and y given a the tropical parameter lambda.
 function tropical_central_path_x_y(r::Int64,lambda::BigFloat)
 
     x = zeros(BigFloat,2r)
@@ -75,6 +77,7 @@ function tropical_central_path_x_y(r::Int64,lambda::BigFloat)
 
 end
 
+#Duality measuring function
 function mu_bar(z,n::Int64,m::Int64)
 
     x,s = z[1:n], z[n+m+1:2n + m]
@@ -83,6 +86,7 @@ function mu_bar(z,n::Int64,m::Int64)
 
 end
 
+# Generator of the newton matrix to compute newton directions in prediction and correction
 function Newton_matrix(n::Int64,m::Int64,A::Array{BigFloat},z::Array{BigFloat})
 
     X , S = Diagonal(z[1:n]),  Diagonal(z[n+m+1:2n + m] );
@@ -101,6 +105,7 @@ function Newton_matrix(n::Int64,m::Int64,A::Array{BigFloat},z::Array{BigFloat})
 
 end
 
+# Function to compute the newton direction given a point and an objective.
 function get_Newton_direction(n::Int64,m::Int64,A::Array{BigFloat},z::Array{BigFloat},mu=BigFloat)
 
     x,s = z[1:n], z[n+m+1:2n + m]
@@ -115,6 +120,7 @@ function get_Newton_direction(n::Int64,m::Int64,A::Array{BigFloat},z::Array{BigF
     return d
 end
 
+# Function to compute the maximal step we can take in the direction computed
 function get_max_step(n::Int64,m::Int64,z::Array{BigFloat},dz::Array{BigFloat},theta_p::Float64)
 
     dx, ds = dz[1:n], dz[n+m+1:2n + m]
@@ -159,7 +165,7 @@ function get_max_step(n::Int64,m::Int64,z::Array{BigFloat},dz::Array{BigFloat},t
 
 end
 
-
+# lift coefs to lift the tropical point to Puiseux series. (coefs are not unique we just made a choice)
 function lifting_coefs(r::Int64,l_alpha::Float64,l_beta::Float64)
 
     alpha = zeros(BigFloat,2r)
@@ -184,7 +190,7 @@ function lifting_coefs(r::Int64,l_alpha::Float64,l_beta::Float64)
 
 end
 
-
+# a lifting function to lift to Puiseux series
 function lifter(r::Int64,t::BigFloat,lambda::BigFloat,l_alpha::Float64, l_beta::Float64)
 
     alpha, beta = lifting_coefs(r,l_alpha,l_beta)
@@ -211,7 +217,7 @@ function lifter(r::Int64,t::BigFloat,lambda::BigFloat,l_alpha::Float64, l_beta::
 end
 
 
-
+# A function to find a valid initial point for the algorithm
 function initializer(n::Int64,m::Int64,z_0::Array{BigFloat},A::Array{BigFloat},theta::Float64)
 
     z = copy(z_0)
@@ -240,11 +246,11 @@ function initializer(n::Int64,m::Int64,z_0::Array{BigFloat},A::Array{BigFloat},t
 end
 
 
+# the predictor corrector solver for the linear program. See J.C. Gilbert's book for details.
 function solve_until_mu_1(n::Int64,m::Int64,A::Array{BigFloat},z::Array{BigFloat},theta::Float64,theta_p::Float64)
 
-    x_corrections = []
-    y_corrections = []
-
+    x_corrections,y_corrections = zeros(BigFloat,0), zeros(BigFloat,0)
+    x_predictions,y_predictions = zeros(BigFloat,0), zeros(BigFloat,0)
 
     iteration = 0
 
@@ -255,24 +261,14 @@ function solve_until_mu_1(n::Int64,m::Int64,A::Array{BigFloat},z::Array{BigFloat
     while mu > 0.9
         iteration += 1
 
+        println("--------- iteration ", iteration, " --------- ")
         #### Prediction ####
         mu = 0.0
         d = get_Newton_direction(n,m,A,z_p,mu)
         alpha = get_max_step(n,m,z_p,d,theta_p)
         z_p = z_p + alpha * d
-#        append!(predictions, [z_p[n-1:n]])
-        println("--------------iteration number-----------------: ", iteration)
-        @printf("d[n-1]  %.5E \n", d[n-1])
-        @printf("d[n] %.5E \n", d[n])
-
-        println()
-        @printf("alpha =  %.5E \n", alpha)
-        println()
-
-
-        @printf("z_p[n-1]  %.5E \n", z_p[n-1])
-        @printf("z_p[n]  %.5E \n", z_p[n])
-
+        append!(x_predictions,z_p[n-1])
+        append!(y_predictions,z_p[n])
         println()
         #### Correction ####
         mu = mu_bar(z_p,n,m)
@@ -283,28 +279,17 @@ function solve_until_mu_1(n::Int64,m::Int64,A::Array{BigFloat},z::Array{BigFloat
         #################
         mu = mu_bar(z_p,n,m)
 
-        @printf("d[n-1]  %.5E \n", d[n-1])
-        @printf("d[n] %.5E \n", d[n])
-
-        println()
-
-        @printf("z_p[n-1]  %.5E \n", z_p[n-1])
-        @printf("z_p[n]  %.5E \n", z_p[n])
-
-        @printf("mu %.5E", mu)
-        println()
-        println()
-        println()
-        println()
+        @printf("\t \t mu %.5E \n \n", mu)
 
     end
 
-    return x_corrections,y_corrections
+    return x_predictions,y_predictions,x_corrections,y_corrections
 
 end
 
-
-
+##############################################################################
+############################# Setting the parameters #########################
+##############################################################################
 
 r = 5
 t = big(10.0^40)
@@ -321,27 +306,14 @@ A,b,c = LW_eq(r,t)
 z = lifter(r,t,lambda,2.0,2.0001)
 z = initializer(n,m,z,A,theta)
 
-println("----- Initilisation ----- ")
-@printf("z[n-1]  %.5E \n", z[n-1])
-@printf("z[n]  %.5E \n", z[n])
+x_predictions,y_predictions,x_corrections,y_corrections = solve_until_mu_1(n,m,A,z,theta,theta_p)
 
+log_t_X_Corrections = log.(x_corrections)/log(t)
+log_t_Y_Corrections = log.(y_corrections)/log(t)
 
+log_t_X_Predictions = log.(x_predictions)/log(t)
+log_t_Y_Predictions = log.(y_predictions)/log(t)
 
-
-x_corrections, y_corrections  = solve_until_mu_1(n,m,A,z,theta,theta_p)
-
-q = size(x_corrections)[1]
-
-
-log_t_X = zeros(BigFloat,q)
-log_t_Y = zeros(BigFloat,q)
-
-for i = 1:q
-
-    log_t_X[i] = log(x_corrections[i]) / log(t)
-    log_t_Y[i] = log(y_corrections[i]) / log(t)
-
-end
-
-
-scatter(log_t_X, log_t_Y)
+gr()
+scatter(log_t_X_Corrections, log_t_Y_Corrections, markersize = 1, markercolor=:red)
+scatter!(log_t_X_Predictions, log_t_Y_Predictions, markersize = 1, markercolor=:blue)
