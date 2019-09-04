@@ -5,3 +5,4 @@ In this project we implement the predictor corrector algorithm on a counter exam
 
 Our implementation confirms the results of the paper [https://arxiv.org/pdf/1708.01544.pdf] by X. Allamigeon, P. Benchimol, S. Gaubert and M. Joswig .
 
+The code is available in maple and julia. 
